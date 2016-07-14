@@ -7,6 +7,7 @@ import os
 import sys
 import traceback
 import zlib
+import re
 
 import httplib2
 
@@ -65,7 +66,7 @@ def GetUrl(url, times = 0):
         return '', '', False
     try:
         status, _, _, response = fetch_httplib2(url)
-        if status != '200' and status != '304':
+        if status != '200' and status != '304' and status != '404':
             print('status %s, try %d ...' % (status, times + 1))
             return GetUrl(url, times + 1)
         return response, filename, False
@@ -116,6 +117,41 @@ def PostUrl(url, body, key=""):
         t, v, tb = sys.exc_info()
         print("PostUrl: %s, %s, %s" % (t, v, traceback.format_tb(tb)))
         return None
+
+def WGet(url, cached=False):
+    if cached:
+        return GetCacheUrl(url)
+    else:
+        return GetUrl(url)
+
+def RegularMatch(regular, text):
+    x = ''
+    for r in regular:
+        res = re.finditer(r, text)
+        if (res):
+            for i in res:
+                if type(i.group(1)) == bytes:
+                    x += i.group(1).decode("GB18030") + '\n'
+                else:
+                    x += i.group(1) + '\n'
+            text = x
+    if x:
+        x = x[0:len(x)-1]
+    return x
+
+def RegularMatchUrl(url, regular):
+    response,_,_ = WGet(url, True)
+    # 对数据 response 转码
+    coding = 'utf8'
+    try:
+        if type(response) == bytes:
+            response = response.decode(coding)
+    except:
+        coding = 'GB18030'
+        if type(response) == bytes:
+            response = response.decode(coding)
+
+    return RegularMatch([regular], response)
 
 if __name__ == '__main__':
     url = 'http://store.tv.sohu.com/view_content/movie/5008825_704321.html'

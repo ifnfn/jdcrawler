@@ -1,28 +1,22 @@
 #! /usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import hashlib
 import re
-import time
-from urllib.parse import quote, urljoin
+from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup as bs, Tag
 import tornado.escape
 
 import kola
 
-from .engines import VideoEngine, KolaParser
+from .engines import EngineBase, KolaParser
 
-
-global Debug
-Debug = True
-
-
-# <div class="spec-items">
 
 # 获取商品价格
 #https://p.3.cn/prices/mgets?callback=jQuery2818475&type=1&area=1_72_4137&skuIds=J_1005131698%2CJ_1005388333
 
+# 获取商品介绍
+# https://d.3.cn/desc/1247820412?cdn=2&callback=showdesc
 
 class ParserGoodsDetailed(KolaParser):
     def __init__(self, url=None, data=None):
@@ -32,26 +26,46 @@ class ParserGoodsDetailed(KolaParser):
             # self.cmd['regular'] = ['(<h6.*?>[\s\S]*?</h6>|<a href=.*class="next".*</a>)']
             self.cmd['cache']    = True
             if data:
-                self.cmd['data'] = data
+                self.cmd['private'] = data
 
     def CmdParser(self, js):
+        data = js['private']
         soup = bs(js['data'], "html.parser")  # , from_encoding = 'GBK')
+
 
         # 大图浏览
         playlist = soup.findAll('div', {'class' : 'spec-items'})
-        print(playlist)
+        for t in playlist[0].contents:
+            if type(t) == Tag:
+                images = []
+                imageList = t.findAll('img', {'data-img': '1'})
+                for i in imageList:
+                    images.append(i['data-url'])
+                data['images'] = images
 
-        # 选择各类
-        playlist = soup.findAll('div', {'id' : 'choose-color'})
-        print(playlist)
 
-        # 商品参数
-        playlist = soup.findAll('div', {'id' : 'p-parameter'})
-        print(playlist)
+        # # 选择子类
+        # playlist = soup.findAll('div', {'id' : 'choose-color'})
+        # print("选择子类")
+        # print(playlist)
+
+
+        # # 商品参数
+        # playlist = soup.findAll('div', {'class' : 'p-parameter'})
+        # print("商品参数")
+        # print(playlist)
+
 
         # 商品详细介绍（图片列表）
-        playlist = soup.findAll('div', {'id' : 'J-detail-content'})
-        print(playlist)
+        desc = re.findall("desc: '([\s\S]*?)',", js['data'])
+        if desc:
+            url = urljoin('https://d.3.cn/desc/', desc[0])
+            text = kola.RegularMatchUrl(url, "showdesc\((.*)\)")
+            if text:
+                showdesc = tornado.escape.json_decode(text)
+                data['content'] = showdesc['content']
+
+        return True, data
 
 # 解析商品列表
 class ParserGoodsList(KolaParser):
@@ -65,9 +79,9 @@ class ParserGoodsList(KolaParser):
     def CmdParser(self, js):
         soup = bs(js['data'], "html.parser")  # , from_encoding = 'GBK')
 
-        data = {}
-        playlist = soup.findAll('div', {'class' : 'gl-i-wrap j-sku-item'})
-        for p in playlist:
+        data = []
+        goodsList = soup.findAll('div', {'class' : 'gl-i-wrap j-sku-item'})
+        for p in goodsList:
             # <div class="gl-i-wrap j-sku-item" data-sku="2728940" jdzy_shop_id="1000013923" venderid="1000013923">
             #     <div class="p-img">
             #         <a href="//item.jd.com/2728940.html" target="_blank">
@@ -102,31 +116,33 @@ class ParserGoodsList(KolaParser):
             #     <div class="p-stock" data-isdeliveryable="5" style="display: none;"></div>
             # </div>
 
+            goods = {}
             if 'data-sku' in p.attrs:
-                data['data-sku'] = p.attrs['data-sku']
+                goods['data-sku'] = p.attrs['data-sku']
             if 'venderid' in p.attrs:
-                data['venderid'] = p.attrs['venderid']
+                goods['venderid'] = p.attrs['venderid']
 
             # 取图片信息
             data_img = p.findAll('img', {'data-img': '1'})
             if data_img:
                 if 'src' in data_img[0]:
-                    data['data-img'] = urljoin('https://list.jd.com', data_img[0]['data-lazy-img'])
+                    goods['data-img'] = urljoin('https://list.jd.com', data_img[0]['data-lazy-img'])
                 elif 'data-lazy-img' in data_img[0]:
-                    data['data-img'] = urljoin('https://list.jd.com', data_img[0]['data-lazy-img'])
+                    goods['data-img'] = urljoin('https://list.jd.com', data_img[0]['data-lazy-img'])
                 pass
 
             # 取商品名称与详细介绍
             p_name = p.findAll('div', {'class': 'p-name'})
             if p_name:
-                data['p-name'] = p_name[0].text.strip()
+                goods['p-name'] = p_name[0].text.strip()
 
             if type(p_name[0]) == Tag:
                 for t in p_name[0].contents:
                     if type(t) == Tag:
                         url = urljoin('https://list.jd.com', t['href'])
-                        data['desc'] = url
-                        ParserGoodsDetailed(url, data).Execute()
+                        goods['desc'] = url
+                        ParserGoodsDetailed(url, goods).Execute()
+            data.append(goods)
 
         # 下一页
         # [<a class="pn-next" href="/list.html?cat=12218,12221&amp;page=2&amp;go=0&amp;JL=6_0_0">下一页<i>&gt;</i></a>]
@@ -135,10 +151,10 @@ class ParserGoodsList(KolaParser):
         #     href = "https://list.jd.com" + a.attrs['href']
         #     ParserGoodsList(href).Execute()
 
-        return True
+        return True, None
 
 # JD 搜索引擎
-class JDEngine(VideoEngine):
+class JDEngine(EngineBase):
     def __init__(self):
         super().__init__()
 

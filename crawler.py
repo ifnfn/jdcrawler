@@ -1,25 +1,27 @@
 #!env python3
 # -*- coding: utf-8 -*-
 
-import os
-from urllib.parse import unquote
-import zlib, sys
-
 import engine
-import kola
+from kola.ThreadPool import ThreadPool
 
+tv = engine.KolaEngine()
 
 def main():
-    tv = engine.KolaEngine()
     tv.Start()
 
     while True:
-        cmd = tv.command.GetCommand() # 拿到一条解析命令
+        cmd = tv.GetCommand()
         if cmd:
-            tv.ProcessCommand(cmd, 3)
+            data = tv.ProcessCommand(cmd, 3)
+            print(data)
         else:
             break
 
+def main_thread():
+    thread_pool = ThreadPool(2)
+    for _ in range(100):
+        thread_pool.add_job(main)
 
 if __name__ == '__main__':
-    main()
+    # main_thread()
+   main()

@@ -11,6 +11,7 @@ from kola import Singleton
 global Debug
 Debug = True
 
+
 # 命令管理器
 class KolaCommand(Singleton):
     db = redis.Redis(host='127.0.0.1', port=6379, db=0)
@@ -33,13 +34,10 @@ class EngineCommands(KolaCommand):
         self.urlmap = {}
         self.pipe = None
 
-    def GetUrl(self, url):
-        return url
-
     def AddCommand(self, cmd):
         if 'source' in cmd or 'text' in cmd:
             if 'source' in cmd:
-                cmd['source'] = self.GetUrl(cmd['source'])
+                cmd['source'] = cmd['source']
             if self.pipe == None:
                 self.pipe = self.db.pipeline()
             self.pipe.rpush('command', tornado.escape.json_encode(cmd))
@@ -70,7 +68,7 @@ class KolaParser:
         self.command.Execute()
 
 # 解析引擎
-class VideoEngine:
+class EngineBase:
     def __init__(self):
         self.engine_name = 'EngineBase'
 
@@ -81,12 +79,11 @@ class VideoEngine:
         try:
             for engine in self.parserList:
                 if engine.name == js['engine']:
-                    engine.CmdParser(js)
-                    return True
+                    return engine.CmdParser(js)
 
         except:
             t, v, tb = sys.exc_info()
             print("VideoEngine.ParserHtml:  %s,%s, %s" % (t, v, traceback.format_tb(tb)))
 
-        return False
+        return False, None
 
