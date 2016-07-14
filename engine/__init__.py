@@ -14,7 +14,7 @@ import traceback
 from kola import ThreadPool
 
 from .engines import EngineCommands, VideoEngine, KolaParser
-from .qq import QQEngine
+from .jd import JDEngine
 from kola import GetUrl, GetCacheUrl, PostUrl
 
 
@@ -28,7 +28,7 @@ class KolaEngine:
         self.engines = []
         self.UpdateAlbumFlag = False
 
-        self.AddEngine(QQEngine)
+        self.AddEngine(JDEngine)
 
     def AddEngine(self, egClass):
         self.engines.append(egClass())
@@ -87,8 +87,6 @@ class KolaEngine:
         cache_file = ''
         found = False
         response = ''
-
-        print(type(cmd))
 
         if times > MAX_TRY or type(cmd) != dict:
             return False

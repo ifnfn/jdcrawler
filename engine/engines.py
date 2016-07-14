@@ -42,7 +42,7 @@ class EngineCommands(KolaCommand):
                 cmd['source'] = self.GetUrl(cmd['source'])
             if self.pipe == None:
                 self.pipe = self.db.pipeline()
-            print(self.pipe.rpush('command', tornado.escape.json_encode(cmd)))
+            self.pipe.rpush('command', tornado.escape.json_encode(cmd))
         return self
 
     def Execute(self):
@@ -62,7 +62,6 @@ class KolaParser:
 
     def AddCommand(self):
         if self.cmd:
-            print(self.cmd)
             self.command.AddCommand(self.cmd)
             self.cmd = None
 
