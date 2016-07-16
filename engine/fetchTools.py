@@ -85,6 +85,7 @@ def GetCacheUrl(url):
         f = open(filename, 'rb')
         response = f.read()
         f.close()
+        print(filename, url)
     else:
         response,_,_ = GetUrl(url)
         if response:

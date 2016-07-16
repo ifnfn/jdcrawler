@@ -6,10 +6,12 @@ import traceback
 import redis
 import threading
 import tornado.escape
-from kola import Singleton
+from .singleton import Singleton
 
 global Debug
 Debug = True
+
+MAX_TRY = 3
 
 
 # 命令管理器
@@ -47,6 +49,8 @@ class EngineCommands(KolaCommand):
         if self.pipe:
             self.pipe.execute()
             self.pipe = None
+
+
 
 # 网页解析器
 class KolaParser:
