@@ -1,9 +1,12 @@
 #!env python3
 # -*- coding: utf-8 -*-
 
+""" 用于 """
+
 import engine
 import pymongo
 import threading
+
 
 class Crawler:
     def __init__(self, thread_num=1):
@@ -20,7 +23,8 @@ class Crawler:
         for item in self.threads:
             item.start()
         for item in self.threads:
-            if item.isAlive():item.join()
+            if item.isAlive():
+                item.join()
 
     def RunOne(self):
         cmd = self.tv.GetCommand()
@@ -31,6 +35,7 @@ class Crawler:
                 return True
         return False
 
+
 class Work(threading.Thread):
     def __init__(self, crawler):
         super().__init__()
@@ -40,8 +45,10 @@ class Work(threading.Thread):
         while True:
             self.crawler.RunOne()
 
+
 def main():
     Crawler(4).Wait()
 
+
 if __name__ == '__main__':
-   main()
+    main()

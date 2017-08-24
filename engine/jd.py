@@ -133,40 +133,6 @@ class ParserGoodsList(KolaParser):
         data = []
         goodsList = soup.findAll('div', {'class' : 'gl-i-wrap j-sku-item'})
         for p in goodsList:
-            # <div class="gl-i-wrap j-sku-item" data-sku="2728940" jdzy_shop_id="1000013923" venderid="1000013923">
-            #     <div class="p-img">
-            #         <a href="//item.jd.com/2728940.html" target="_blank">
-            #             <img data-img="1" height="220" src="//img10.360buyimg.com/n7/jfs/t2821/239/381741115/358017/c17e621e/57104694Nd47d0613.jpg" width="220">
-            #             </img>
-            #         </a>
-            #     </div>
-            #     <div class="p-price">
-            #         <strong class="J_price"><em></em><i></i></strong>
-            #         <div class="p-icons J-pro-icons">
-            #         </div>
-            #     </div>
-            #     <div class="p-name">
-            #         <a href="//item.jd.com/2728940.html" target="_blank" title="">
-            #             <em>佳沛zespri 新西兰进口金奇异果猕猴桃 16粒装 36#果 自营水果</em>
-            #             <i class="promo-words"></i>
-            #         </a>
-            #     </div>
-            #     <div class="p-shop hide" data-done="1" data-reputation="0" data-score="4" data-shopid=""></div>
-            #     <div class="p-commit"><strong>已有<a href="//item.jd.com/2728940.html#comment" target="_blank">5141</a>人评价</strong></div>
-            #     <div class="p-operate">
-            #         <a class="p-o-btn contrast J_contrast" data-sku="2728940" href="javascript:;">
-            #             <i></i>对比
-            #         </a>
-            #         <a class="p-o-btn focus J_focus" data-sku="2728940" href="javascript:;">
-            #             <i></i>关注
-            #         </a>
-            #         <a class="p-o-btn addcart" href="//gate.jd.com/InitCart.aspx?pid=2728940&amp;pcount=1&amp;ptype=1" target="_blank">
-            #             <i></i>加入购物车
-            #         </a>
-            #     </div>
-            #     <div class="p-stock" data-isdeliveryable="5" style="display: none;"></div>
-            # </div>
-
             goods = {}
             if 'data-sku' in p.attrs:
                 goods['data-sku'] = p.attrs['data-sku']

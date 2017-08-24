@@ -50,8 +50,6 @@ class EngineCommands(KolaCommand):
             self.pipe.execute()
             self.pipe = None
 
-
-
 # 网页解析器
 class KolaParser:
     def __init__(self):

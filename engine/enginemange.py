@@ -9,6 +9,7 @@ import traceback
 from .fetchTools import GetUrl, GetCacheUrl, PostUrl, WGet, RegularMatch, RegularMatchUrl
 from .engines import EngineCommands
 from .jd import JDEngine
+from .letv import LetvEngine
 
 MAX_TRY = 3
 
@@ -18,7 +19,8 @@ class KolaEngine:
         self.engines = []
         self.UpdateAlbumFlag = False
 
-        self.AddEngine(JDEngine)
+        #self.AddEngine(JDEngine)
+        self.AddEngine(LetvEngine)
 
     def GetCommand(self):
         return self.command.GetCommand()
